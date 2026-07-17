@@ -5,8 +5,16 @@ import '../../core/widgets/food_card.dart';
 import '../../core/widgets/hero_banner.dart';
 import '../../data/food_data.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String searchText = "";
+String selectedCategory = "All";
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +25,18 @@ class HomeScreen extends StatelessWidget {
       "Pizza",
       "Pasta",
     ];
+
+    final filteredFood = foodList.where((food) {
+  final matchesSearch = food.name
+      .toLowerCase()
+      .contains(searchText.toLowerCase());
+
+  final matchesCategory =
+      selectedCategory == "All" ||
+      food.category == selectedCategory;
+
+  return matchesSearch && matchesCategory;
+}).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xffF8FAFC),
@@ -50,7 +70,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 28),
 
             Container(
-              height: 56,
+              height: 46,
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
@@ -62,8 +82,13 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const TextField(
-                decoration: InputDecoration(
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    searchText = value;
+                  });
+                },
+                decoration: const InputDecoration(
                   border: InputBorder.none,
                   prefixIcon: Icon(Icons.search),
                   hintText: "Search dishes...",
@@ -75,14 +100,20 @@ class HomeScreen extends StatelessWidget {
 
             SizedBox(
               height: 48,
-              child: ListView.builder(
+              child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
                 itemBuilder: (context, index) {
                   return CategoryChip(
                     title: categories[index],
-                    selected: index == 0,
-                    onTap: () {},
+                    selected: selectedCategory == categories[index],
+
+       onTap: () {
+        setState(() {
+        selectedCategory = categories[index];
+  });
+},
                   );
                 },
               ),
@@ -90,11 +121,26 @@ class HomeScreen extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            ...foodList.map(
-              (food) => FoodCard(
-                food: food,
+            if (filteredFood.isEmpty)
+              const Padding(
+                padding: EdgeInsets.only(top: 50),
+                child: Center(
+                  child: Text(
+                    "No dishes found",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              )
+            else
+              ...filteredFood.map(
+                (food) => Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: FoodCard(food: food),
+                ),
               ),
-            ),
           ],
         ),
       ),

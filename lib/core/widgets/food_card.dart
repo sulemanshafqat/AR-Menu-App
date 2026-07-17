@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/food.dart';
+import '../../providers/cart_provider.dart';
+import '../../providers/favorite_provider.dart';
 import '../../screens/details/food_details_screen.dart';
 
 class FoodCard extends StatelessWidget {
@@ -18,27 +21,25 @@ class FoodCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => FoodDetailsScreen(food: food),
+            builder: (_) => FoodDetailScreen(food: food),
           ),
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 22),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 18,
-              offset: const Offset(0, 6),
+              offset: const Offset(0, 8),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            /// Food Image
             Hero(
               tag: food.name,
               child: ClipRRect(
@@ -59,7 +60,7 @@ class FoodCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  /// Name + AR Badge
+                  // Name + AR + Favorite
                   Row(
                     children: [
                       Expanded(
@@ -71,6 +72,7 @@ class FoodCard extends StatelessWidget {
                           ),
                         ),
                       ),
+
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 10,
@@ -88,6 +90,26 @@ class FoodCard extends StatelessWidget {
                           ),
                         ),
                       ),
+
+                      const SizedBox(width: 10),
+
+                      Consumer<FavoriteProvider>(
+                        builder: (context, favorites, child) {
+                          final isFavorite = favorites.isFavorite(food);
+
+                          return IconButton(
+                            onPressed: () {
+                              favorites.toggleFavorite(food);
+                            },
+                            icon: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              color: Colors.red,
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
 
@@ -99,8 +121,6 @@ class FoodCard extends StatelessWidget {
                       color: Colors.grey.shade600,
                       height: 1.45,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
 
                   const SizedBox(height: 18),
@@ -112,18 +132,14 @@ class FoodCard extends StatelessWidget {
                         color: Colors.amber,
                         size: 20,
                       ),
-
                       const SizedBox(width: 4),
-
                       Text(
                         food.rating,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const Spacer(),
-
                       Text(
                         food.price,
                         style: const TextStyle(
@@ -142,12 +158,7 @@ class FoodCard extends StatelessWidget {
                       Expanded(
                         child: ElevatedButton.icon(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => FoodDetailsScreen(food: food),
-                              ),
-                            );
+                            // AR Viewer later
                           },
                           icon: const Icon(Icons.view_in_ar),
                           label: const Text("View in AR"),
@@ -166,9 +177,21 @@ class FoodCard extends StatelessWidget {
 
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: () {
+                            context.read<CartProvider>().addToCart(food);
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 2),
+                                content: Text(
+                                  "${food.name} added to cart",
+                                ),
+                              ),
+                            );
+                          },
                           icon: const Icon(Icons.shopping_cart_outlined),
-                          label: const Text("Add"),
+                          label: const Text("Add to Cart"),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xff2563EB),
                             side: const BorderSide(

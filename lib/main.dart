@@ -1,21 +1,45 @@
 import 'package:flutter/material.dart';
-import 'core/theme/app_theme.dart';
-import 'screens/home/home_screen.dart';
+import 'package:provider/provider.dart';
+
+import 'core/navigation/bottom_nav.dart';
+import 'providers/cart_provider.dart';
+import 'providers/favorite_provider.dart';
+import 'providers/orders_provider.dart';
 
 void main() {
-  runApp(const SpectoXRApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => CartProvider(),
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => FavoriteProvider(),
+        ),
+
+        ChangeNotifierProvider(
+          create: (_) => OrdersProvider(),
+        ),
+      ],
+      child: const ARMenuApp(),
+    ),
+  );
 }
 
-class SpectoXRApp extends StatelessWidget {
-  const SpectoXRApp({super.key});
+class ARMenuApp extends StatelessWidget {
+  const ARMenuApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'SpectoXR AR Menu',
-      theme: AppTheme.lightTheme,
-      home: const HomeScreen(),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: const Color(0xff2563EB),
+      ),
+      home: const BottomNav(),
     );
   }
 }

@@ -18,6 +18,7 @@ class CategoryChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
         margin: const EdgeInsets.only(right: 12),
         padding: const EdgeInsets.symmetric(
           horizontal: 22,
@@ -33,15 +34,29 @@ class CategoryChip extends StatelessWidget {
                 ? const Color(0xff2563EB)
                 : Colors.grey.shade300,
           ),
+          boxShadow: [
+            if (selected)
+              BoxShadow(
+                color: const Color(0xff2563EB).withValues(alpha: 0.25),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              )
+            else
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+          ],
         ),
-        child: Text(
-          title,
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 250),
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: selected
-                ? Colors.white
-                : Colors.black87,
+            fontSize: 15,
+            color: selected ? Colors.white : Colors.black87,
           ),
+          child: Text(title),
         ),
       ),
     );

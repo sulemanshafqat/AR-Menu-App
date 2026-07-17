@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../../data/food_data.dart';
+import '../../screens/details/food_details_screen.dart';
+
 class HeroBanner extends StatelessWidget {
   const HeroBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Featured food (first item = Biryani)
+    final featuredFood = foodList.first;
+
     return Container(
-      height: 200,
+      height: 205,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
         gradient: const LinearGradient(
@@ -20,11 +26,11 @@ class HeroBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          /// LEFT SIDE
+          /// LEFT
           Expanded(
             flex: 6,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(22, 18, 12, 18),
+              padding: const EdgeInsets.fromLTRB(22, 20, 12, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -48,39 +54,43 @@ class HeroBanner extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
 
                   const Text(
                     "20% OFF",
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 28,
+                      fontSize: 30,
                     ),
                   ),
 
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
 
-                  const Text(
-                    "Biryani Combo",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
+                  Text(
+                    featuredFood.name,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 17,
                     ),
                   ),
-
-                  const SizedBox(height: 4),
-
-                 
 
                   const Spacer(),
 
                   SizedBox(
-                    width: 140,
+                    width: 145,
                     height: 42,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => FoodDetailScreen(
+                              food: featuredFood,
+                            ),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: const Color(0xff2563EB),
@@ -93,7 +103,6 @@ class HeroBanner extends StatelessWidget {
                         "Order Now",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 15,
                         ),
                       ),
                     ),
@@ -103,18 +112,25 @@ class HeroBanner extends StatelessWidget {
             ),
           ),
 
-          /// RIGHT SIDE
+          /// RIGHT
           Expanded(
             flex: 5,
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(22),
-                child: Image.asset(
-                  "assets/images/offer.png",
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
+              padding: const EdgeInsets.only(
+                right: 12,
+                top: 12,
+                bottom: 12,
+              ),
+              child: Hero(
+                tag: featuredFood.name,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(22),
+                  child: Image.asset(
+                    featuredFood.image,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
                 ),
               ),
             ),

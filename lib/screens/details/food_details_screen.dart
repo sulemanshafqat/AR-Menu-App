@@ -1,250 +1,290 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../models/food.dart';
+import '../../providers/cart_provider.dart';
 
-class FoodDetailsScreen extends StatefulWidget {
+class FoodDetailScreen extends StatefulWidget {
   final Food food;
 
-  const FoodDetailsScreen({
+  const FoodDetailScreen({
     super.key,
     required this.food,
   });
 
   @override
-  State<FoodDetailsScreen> createState() => _FoodDetailsScreenState();
+  State<FoodDetailScreen> createState() => _FoodDetailScreenState();
 }
 
-class _FoodDetailsScreenState extends State<FoodDetailsScreen> {
+class _FoodDetailScreenState extends State<FoodDetailScreen> {
   int quantity = 1;
+
+  double get price {
+    return double.parse(
+      widget.food.price.replaceAll("\$", ""),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final total = price * quantity;
+
     return Scaffold(
       backgroundColor: const Color(0xffF8FAFC),
 
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 330,
+            pinned: true,
+            backgroundColor: Colors.white,
 
-              /// IMAGE
-              Stack(
-                children: [
-
-                  Hero(
-                    tag: widget.food.name,
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(30),
-                        bottomRight: Radius.circular(30),
-                      ),
-                      child: Image.asset(
-                        widget.food.image,
-                        width: double.infinity,
-                        height: 320,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-
-                  Positioned(
-                    top: 18,
-                    left: 18,
-                    child: CircleAvatar(
-                      backgroundColor: Colors.white,
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                    ),
-                  ),
-                ],
+            leading: IconButton(
+              icon: const CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(
+                  Icons.arrow_back,
+                  color: Colors.black,
+                ),
               ),
+              onPressed: () => Navigator.pop(context),
+            ),
 
-              Padding(
-                padding: const EdgeInsets.all(22),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+            flexibleSpace: FlexibleSpaceBar(
+              background: Hero(
+                tag: widget.food.name,
+                child: Image.asset(
+                  widget.food.image,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
 
-                    Text(
-                      widget.food.name,
-                      style: const TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    Row(
-                      children: [
-
-                        const Icon(
-                          Icons.star,
-                          color: Colors.amber,
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
                         ),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              color: Colors.orange,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              widget.food.rating,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-                        const SizedBox(width: 6),
+                      const SizedBox(width: 12),
 
-                        Text(
-                          widget.food.rating,
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          widget.food.category,
                           style: const TextStyle(
+                            color: Colors.green,
                             fontWeight: FontWeight.bold,
-                            fontSize: 18,
                           ),
                         ),
-
-                        const Spacer(),
-
-                        Text(
-                          widget.food.price,
-                          style: const TextStyle(
-                            fontSize: 30,
-                            color: Color(0xff2563EB),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 25),
-
-                    const Text(
-                      "Description",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
                       ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  Text(
+                    widget.food.name,
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
                     ),
+                  ),
 
-                    const SizedBox(height: 10),
+                  const SizedBox(height: 10),
 
-                    Text(
-                      widget.food.description,
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 16,
-                        height: 1.6,
+                  Text(
+                    widget.food.price,
+                    style: const TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xff2563EB),
+                    ),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  Text(
+                    widget.food.description,
+                    style: TextStyle(
+                      color: Colors.grey.shade700,
+                      fontSize: 16,
+                      height: 1.6,
+                    ),
+                  ),
+
+                  const SizedBox(height: 35),
+
+                  const Text(
+                    "Quantity",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  Row(
+                    children: [
+                      IconButton.filled(
+                        onPressed: () {
+                          if (quantity > 1) {
+                            setState(() {
+                              quantity--;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.remove),
                       ),
-                    ),
 
-                    const SizedBox(height: 35),
-
-                    const Text(
-                      "Quantity",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    Row(
-                      children: [
-
-                        IconButton(
-                          onPressed: () {
-                            if (quantity > 1) {
-                              setState(() {
-                                quantity--;
-                              });
-                            }
-                          },
-                          icon: const Icon(Icons.remove_circle),
-                          iconSize: 34,
-                          color: Colors.red,
-                        ),
-
-                        Text(
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
                           quantity.toString(),
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                      ),
 
-                        IconButton(
-                          onPressed: () {
-                            setState(() {
-                              quantity++;
-                            });
-                          },
-                          icon: const Icon(Icons.add_circle),
-                          iconSize: 34,
-                          color: Colors.green,
-                        ),
-                      ],
-                    ),
+                      IconButton.filled(
+                        onPressed: () {
+                          setState(() {
+                            quantity++;
+                          });
+                        },
+                        icon: const Icon(Icons.add),
+                      ),
+                    ],
+                  ),
 
-                    const SizedBox(height: 40),
+                  const SizedBox(height: 35),
 
-                    SizedBox(
-                      width: double.infinity,
-                      height: 58,
-                      child: ElevatedButton.icon(
-                        onPressed: () {},
-
-                        icon: const Icon(Icons.view_in_ar),
-
-                        label: const Text(
-                          "View in AR",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xff2563EB),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Total",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 16),
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: 58,
-                      child: OutlinedButton.icon(
-                        onPressed: () {},
-
-                        icon: const Icon(Icons.shopping_cart),
-
-                        label: const Text(
-                          "Add To Cart",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xff2563EB),
-                          side: const BorderSide(
-                            color: Color(0xff2563EB),
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
+                      Text(
+                        "\$${total.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                          fontSize: 28,
+                          color: Color(0xff2563EB),
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
+                    ],
+                  ),
 
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                  const SizedBox(height: 40),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 58,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // AR Viewer will be connected later
+                      },
+                      icon: const Icon(Icons.view_in_ar),
+                      label: const Text(
+                        "View in AR",
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 58,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // Add selected quantity to cart
+                        for (int i = 0; i < quantity; i++) {
+                          context.read<CartProvider>().addToCart(widget.food);
+                        }
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            behavior: SnackBarBehavior.floating,
+                            content: Text(
+                              "$quantity × ${widget.food.name} added to cart",
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.shopping_cart),
+                      label: const Text(
+                        "Add To Cart",
+                        style: TextStyle(
+                          fontSize: 18,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xff2563EB),
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
