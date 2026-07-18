@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'screens/splash/splash_screen.dart';
 
-import 'core/navigation/bottom_nav.dart';
 import 'providers/cart_provider.dart';
 import 'providers/favorite_provider.dart';
 import 'providers/orders_provider.dart';
@@ -39,7 +39,7 @@ class ARMenuApp extends StatelessWidget {
         useMaterial3: true,
         colorSchemeSeed: const Color(0xff2563EB),
       ),
-      home: const BottomNav(),
+      home: const SplashScreen(),
     );
   }
 }

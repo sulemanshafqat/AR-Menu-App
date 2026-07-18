@@ -4,6 +4,7 @@ import '../../core/widgets/category_chip.dart';
 import '../../core/widgets/food_card.dart';
 import '../../core/widgets/hero_banner.dart';
 import '../../data/food_data.dart';
+import '../favorites/favorites_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,7 +15,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String searchText = "";
-String selectedCategory = "All";
+  String selectedCategory = "All";
 
   @override
   Widget build(BuildContext context) {
@@ -27,16 +28,16 @@ String selectedCategory = "All";
     ];
 
     final filteredFood = foodList.where((food) {
-  final matchesSearch = food.name
-      .toLowerCase()
-      .contains(searchText.toLowerCase());
+      final matchesSearch = food.name
+          .toLowerCase()
+          .contains(searchText.toLowerCase());
 
-  final matchesCategory =
-      selectedCategory == "All" ||
-      food.category == selectedCategory;
+      final matchesCategory =
+          selectedCategory == "All" ||
+          food.category == selectedCategory;
 
-  return matchesSearch && matchesCategory;
-}).toList();
+      return matchesSearch && matchesCategory;
+    }).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xffF8FAFC),
@@ -45,22 +46,62 @@ String selectedCategory = "All";
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 30),
           children: [
-            const Text(
-              "Good Evening 👋",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 15,
-              ),
-            ),
+            /// Top Row
+            Row(
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Good Evening 👋",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 15,
+                        ),
+                      ),
 
-            const SizedBox(height: 6),
+                      SizedBox(height: 6),
 
-            const Text(
-              "Discover Delicious Food",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
-              ),
+                      Text(
+                        "Discover Delicious Food",
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.favorite,
+                      color: Colors.red,
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const FavoritesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
 
             const SizedBox(height: 24),
@@ -69,6 +110,7 @@ String selectedCategory = "All";
 
             const SizedBox(height: 28),
 
+            /// Search Bar
             Container(
               height: 46,
               decoration: BoxDecoration(
@@ -92,28 +134,31 @@ String selectedCategory = "All";
                   border: InputBorder.none,
                   prefixIcon: Icon(Icons.search),
                   hintText: "Search dishes...",
+                  contentPadding: EdgeInsets.only(bottom: 10),
                 ),
               ),
             ),
 
             const SizedBox(height: 24),
 
+            /// Categories
             SizedBox(
               height: 48,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: categories.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(width: 12),
                 itemBuilder: (context, index) {
                   return CategoryChip(
                     title: categories[index],
-                    selected: selectedCategory == categories[index],
-
-       onTap: () {
-        setState(() {
-        selectedCategory = categories[index];
-  });
-},
+                    selected:
+                        selectedCategory == categories[index],
+                    onTap: () {
+                      setState(() {
+                        selectedCategory = categories[index];
+                      });
+                    },
                   );
                 },
               ),
