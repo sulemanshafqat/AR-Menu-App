@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/order.dart';
-import '../../providers/orders_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/order_service.dart';
 import '../order_tracking/order_tracking_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
@@ -16,9 +17,12 @@ class _OrdersScreenState extends State<OrdersScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  final OrderService _orderService = OrderService();
+
   @override
   void initState() {
     super.initState();
+
     _tabController = TabController(
       length: 2,
       vsync: this,
@@ -56,31 +60,17 @@ class _OrdersScreenState extends State<OrdersScreen>
     }
   }
 
-  String nextStatus(String status) {
-    switch (status) {
-      case "Pending":
-        return "Accepted";
-
-      case "Accepted":
-        return "Preparing";
-
-      case "Preparing":
-        return "Rider Assigned";
-
-      case "Rider Assigned":
-        return "Out for Delivery";
-
-      case "Out for Delivery":
-        return "Delivered";
-
-      default:
-        return "Delivered";
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<OrdersProvider>();
+    final auth = context.watch<AuthProvider>();
+
+    if (auth.user == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text("Please login first"),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xffF8FAFC),
@@ -93,7 +83,6 @@ class _OrdersScreenState extends State<OrdersScreen>
             fontWeight: FontWeight.bold,
           ),
         ),
-
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: const Color(0xff2563EB),
@@ -106,316 +95,294 @@ class _OrdersScreenState extends State<OrdersScreen>
         ),
       ),
 
-      body: TabBarView(
-        controller: _tabController,
+      body: StreamBuilder<List<Order>>(
+        stream: _orderService.getOrders(
+          "spectoxr_demo",
+          auth.user!.uid,
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState ==
+              ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+        if (snapshot.hasError) {
+  return Center(
+    child: Text(
+      snapshot.error.toString(),
+      textAlign: TextAlign.center,
+    ),
+  );
+}
+
+if (!snapshot.hasData) {
+  return const Center(
+    child: CircularProgressIndicator(),
+  );
+}
+
+          final allOrders = snapshot.data!;
+
+       final activeOrders = allOrders
+    .where((o) => o.status != "Delivered")
+    .toList();
+
+final historyOrders = allOrders
+    .where((o) => o.status == "Delivered")
+    .toList();
+
+          
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              _buildOrders(
+                activeOrders,
+                true,
+              ),
+              _buildOrders(
+                historyOrders,
+                false,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+  
+  Widget _buildOrders(
+  List<Order> orders,
+  bool active,
+) {
+  if (orders.isEmpty) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildOrders(
-            provider.activeOrders,
-            true,
+          Icon(
+            active
+                ? Icons.receipt_long
+                : Icons.history,
+            size: 90,
+            color: Colors.grey.shade400,
           ),
-          _buildOrders(
-            provider.history,
-            false,
+          const SizedBox(height: 20),
+          Text(
+            active
+                ? "No Current Orders"
+                : "No Order History",
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildOrders(
-    List<Order> orders,
-    bool active,
-  ) {
-    if (orders.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              active
-                  ? Icons.receipt_long
-                  : Icons.history,
-              size: 90,
-              color: Colors.grey.shade400,
-            ),
+  return ListView.builder(
+    padding: const EdgeInsets.all(16),
+    itemCount: orders.length,
+    itemBuilder: (context, index) {
+      final order = orders[index];
 
-            const SizedBox(height: 20),
-
-            Text(
-              active
-                  ? "No Current Orders"
-                  : "No Order History",
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
+      return InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OrderTrackingScreen(
+                order: order,
               ),
             ),
-          ],
-        ),
-      );
-    }
-
-    return Consumer<OrdersProvider>(
-      builder: (context, provider, child) {
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: orders.length,
-          itemBuilder: (context, index) {
-            final order = orders[index];
-
-            return InkWell(
-              borderRadius: BorderRadius.circular(20),
-          onTap: () {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => OrderTrackingScreen(
-        order: order,
-      ),
-    ),
-  );
-},
-              child: Card(
-                elevation: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(18),
-                  child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
-                    children: [
-
-                      Row(
-                        children: [
-
-                          const Icon(
-                            Icons.receipt_long,
-                            color: Color(0xff2563EB),
-                          ),
-
-                          const SizedBox(width: 10),
-
-                          Expanded(
-                            child: Text(
-                              "Order #${order.id.substring(order.id.length - 6)}",
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: statusColor(order.status)
-                                  .withValues(alpha: .12),
-                              borderRadius:
-                                  BorderRadius.circular(30),
-                            ),
-                            child: Text(
-                              order.status,
-                              style: TextStyle(
-                                color:
-                                    statusColor(order.status),
-                                fontWeight:
-                                    FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      Text(
-                        order.restaurantName,
+          );
+        },
+        child: Card(
+          elevation: 4,
+          margin: const EdgeInsets.only(bottom: 20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.receipt_long,
+                      color: Color(0xff2563EB),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        "Order #${order.id.substring(order.id.length - 6)}",
                         style: const TextStyle(
-                          color: Colors.grey,
-                        ),
-                      ),
-
-                      const Divider(height: 28),
-
-                      const Text(
-                        "Items",
-                        style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 18,
                         ),
                       ),
-
-                      const SizedBox(height: 10),
-
-                      ...order.items.map(
-                        (item) => Padding(
-                          padding:
-                              const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            children: [
-
-                              Expanded(
-                                child: Text(
-                                  item.food.name,
-                                ),
-                              ),
-
-                              Text(
-                                "x${item.quantity}",
-                                style: const TextStyle(
-                                  fontWeight:
-                                      FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor(order.status)
+                            .withOpacity(.12),
+                        borderRadius:
+                            BorderRadius.circular(30),
+                      ),
+                      child: Text(
+                        order.status,
+                        style: TextStyle(
+                          color: statusColor(order.status),
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
+                    ),
+                  ],
+                ),
 
-                      const Divider(height: 28),
-                                            Row(
-                        children: [
-                          const Icon(
-                            Icons.credit_card,
-                            size: 18,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text("Payment"),
-                          const Spacer(),
-                          Text(
-                            order.paymentMethod,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                const SizedBox(height: 18),
 
-                      const SizedBox(height: 10),
-
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.schedule,
-                            size: 18,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text("ETA"),
-                          const Spacer(),
-                          Text(
-                            "${order.estimatedTime} mins",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      if (order.riderName != null) ...[
-                        const SizedBox(height: 10),
-
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.delivery_dining,
-                              size: 18,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text("Rider"),
-                            const Spacer(),
-                            Text(
-                              order.riderName!,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-
-                      const SizedBox(height: 10),
-
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.attach_money,
-                            size: 18,
-                            color: Colors.grey,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text("Total"),
-                          const Spacer(),
-                          Text(
-                            "\$${order.totalPrice.toStringAsFixed(2)}",
-                            style: const TextStyle(
-                              color: Color(0xff2563EB),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 19,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      if (active) ...[
-                        const SizedBox(height: 24),
-
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (order.status ==
-                                  "Out for Delivery") {
-                                provider.markDelivered(order);
-                              } else {
-                                provider.updateStatus(
-                                  order,
-                                  nextStatus(order.status),
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor:
-                                  const Color(0xff2563EB),
-                              foregroundColor: Colors.white,
-                              padding:
-                                  const EdgeInsets.symmetric(
-                                vertical: 14,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: Text(
-                              order.status ==
-                                      "Out for Delivery"
-                                  ? "Mark Delivered"
-                                  : "Next Status",
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                Text(
+                  order.restaurantName,
+                  style: const TextStyle(
+                    color: Colors.grey,
                   ),
                 ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+
+                const Divider(height: 28),
+
+                const Text(
+                  "Items",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                ...order.items.map(
+                  (item) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(item.food.name),
+                        ),
+                        Text(
+                          "x${item.quantity}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const Divider(height: 28),
+
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.credit_card,
+                      size: 18,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text("Payment"),
+                    const Spacer(),
+                    Text(
+                      order.paymentMethod,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.schedule,
+                      size: 18,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text("ETA"),
+                    const Spacer(),
+                    Text(
+                      "${order.estimatedTime} mins",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+
+                if (order.riderName != null) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.delivery_dining,
+                        size: 18,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text("Rider"),
+                      const Spacer(),
+                      Text(
+                        order.riderName!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+
+                const SizedBox(height: 10),
+
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.attach_money,
+                      size: 18,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text("Total"),
+                    const Spacer(),
+                    Text(
+                      order.totalPrice.toStringAsFixed(2),
+                      style: const TextStyle(
+                        color: Color(0xff2563EB),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 19,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
+
+    }

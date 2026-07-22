@@ -1,44 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../providers/auth_provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  Widget tile(
-    IconData icon,
-    String title,
-  ) {
-    return Card(
-      elevation: 0,
-      margin: const EdgeInsets.only(bottom: 14),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: const Color(0xff2563EB).withValues(alpha: 0.1),
-          child: Icon(
-            icon,
-            color: const Color(0xff2563EB),
-          ),
-        ),
-        title: Text(title),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+
+    final user = auth.user;
+
+    Widget tile({
+      required IconData icon,
+      required String title,
+      VoidCallback? onTap,
+    }) {
+      return Card(
+        elevation: 0,
+        margin: const EdgeInsets.only(bottom: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: const Color(0xff2563EB).withValues(alpha: 0.1),
+            child: Icon(
+              icon,
+              color: const Color(0xff2563EB),
+            ),
+          ),
+          title: Text(title),
+          trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+          onTap: onTap,
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xffF8FAFC),
-
       appBar: AppBar(
         title: const Text("Profile"),
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -56,10 +63,10 @@ class ProfileScreen extends StatelessWidget {
 
           const SizedBox(height: 18),
 
-          const Center(
+          Center(
             child: Text(
-              "Guest User",
-              style: TextStyle(
+              user == null ? "Guest User" : "Welcome",
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -70,7 +77,7 @@ class ProfileScreen extends StatelessWidget {
 
           Center(
             child: Text(
-              "guest@spectoxr.com",
+              user?.email ?? "guest@spectoxr.com",
               style: TextStyle(
                 color: Colors.grey.shade600,
               ),
@@ -79,12 +86,38 @@ class ProfileScreen extends StatelessWidget {
 
           const SizedBox(height: 35),
 
-          tile(Icons.person_outline, "Edit Profile"),
-          tile(Icons.location_on_outlined, "Saved Addresses"),
-          tile(Icons.favorite_border, "Favorites"),
-          tile(Icons.settings_outlined, "Settings"),
-          tile(Icons.help_outline, "Help & Support"),
-          tile(Icons.logout, "Logout"),
+          tile(
+            icon: Icons.person_outline,
+            title: "Edit Profile",
+          ),
+
+          tile(
+            icon: Icons.location_on_outlined,
+            title: "Saved Addresses",
+          ),
+
+          tile(
+            icon: Icons.favorite_border,
+            title: "Favorites",
+          ),
+
+          tile(
+            icon: Icons.settings_outlined,
+            title: "Settings",
+          ),
+
+          tile(
+            icon: Icons.help_outline,
+            title: "Help & Support",
+          ),
+
+          tile(
+            icon: Icons.logout,
+            title: "Logout",
+            onTap: () async {
+              await context.read<AuthProvider>().logout();
+            },
+          ),
         ],
       ),
     );

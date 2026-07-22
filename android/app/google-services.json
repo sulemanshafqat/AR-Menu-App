@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "464880503125",
+    "project_id": "spectoxr-ar-menu",
+    "storage_bucket": "spectoxr-ar-menu.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:464880503125:android:b079b868c61ab47bc747dc",
+        "android_client_info": {
+          "package_name": "com.reachspectoxr.ar_menu"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAx75JfPZrT8lZq4lYW-txyZ0iq_tS0Vv4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

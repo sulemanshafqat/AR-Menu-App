@@ -20,9 +20,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
   int quantity = 1;
 
   double get price {
-    return double.parse(
-      widget.food.price.replaceAll("\$", ""),
-    );
+    return double.tryParse(widget.food.price) ?? 0;
   }
 
   @override
@@ -31,7 +29,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xffF8FAFC),
-
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -56,6 +53,18 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                 child: Image.asset(
                   widget.food.image,
                   fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) {
+                    return Container(
+                      color: Colors.grey.shade300,
+                      child: const Center(
+                        child: Icon(
+                          Icons.restaurant,
+                          size: 80,
+                          color: Colors.grey,
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -131,7 +140,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                   const SizedBox(height: 10),
 
                   Text(
-                    widget.food.price,
+                    "Rs ${widget.food.price}",
                     style: const TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
@@ -211,7 +220,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                       ),
 
                       Text(
-                        "\$${total.toStringAsFixed(2)}",
+                        "Rs ${total.toStringAsFixed(0)}",
                         style: const TextStyle(
                           fontSize: 28,
                           color: Color(0xff2563EB),
@@ -233,9 +242,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                       icon: const Icon(Icons.view_in_ar),
                       label: const Text(
                         "View in AR",
-                        style: TextStyle(
-                          fontSize: 18,
-                        ),
+                        style: TextStyle(fontSize: 18),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
@@ -251,7 +258,6 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                     height: 58,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Add selected quantity to cart
                         for (int i = 0; i < quantity; i++) {
                           context.read<CartProvider>().addToCart(widget.food);
                         }
@@ -268,9 +274,7 @@ class _FoodDetailScreenState extends State<FoodDetailScreen> {
                       icon: const Icon(Icons.shopping_cart),
                       label: const Text(
                         "Add To Cart",
-                        style: TextStyle(
-                          fontSize: 18,
-                        ),
+                        style: TextStyle(fontSize: 18),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xff2563EB),

@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/orders_provider.dart';
+
 import '../success/order_success_screen.dart';
 
 class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key});
+  final String customerName;
+  final String customerPhone;
+  final String deliveryAddress;
+
+  const PaymentScreen({
+    super.key,
+    required this.customerName,
+    required this.customerPhone,
+    required this.deliveryAddress,
+  });
 
   @override
   State<PaymentScreen> createState() => _PaymentScreenState();
@@ -21,18 +32,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xffF8FAFC),
-
       appBar: AppBar(
         title: const Text("Payment"),
         centerTitle: true,
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
             const Text(
               "Select Payment Method",
@@ -75,20 +82,36 @@ class _PaymentScreenState extends State<PaymentScreen> {
             SizedBox(
               width: double.infinity,
               height: 58,
-
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   final orders = context.read<OrdersProvider>();
+                  final auth = context.read<AuthProvider>();
 
-                  orders.placeOrder(
+                  if (auth.user == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Please login first."),
+                      ),
+                    );
+                    return;
+                  }
+
+                  await orders.placeOrder(
                     cartItems: List.from(cart.items),
                     paymentMethod: selectedMethod,
                     totalPrice: cart.totalPrice,
+
                     restaurantName: "Specto Restaurant",
-                    deliveryAddress: "Current Address",
+                    deliveryAddress: widget.deliveryAddress,
+
+                    customerId: auth.user!.uid,
+                    customerName: widget.customerName,
+                    customerPhone: widget.customerPhone,
                   );
 
                   cart.clearCart();
+
+                  if (!mounted) return;
 
                   Navigator.pushReplacement(
                     context,
@@ -97,7 +120,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ),
                   );
                 },
-
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xff2563EB),
                   foregroundColor: Colors.white,
@@ -105,7 +127,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-
                 child: const Text(
                   "Place Order",
                   style: TextStyle(
@@ -121,7 +142,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  Widget _paymentOption(String title, IconData icon) {
+  Widget _paymentOption(
+    String title,
+    IconData icon,
+  ) {
     final selected = selectedMethod == title;
 
     return GestureDetector(
@@ -130,26 +154,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
           selectedMethod = title;
         });
       },
-
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
-
         padding: const EdgeInsets.all(18),
-
         decoration: BoxDecoration(
           color: selected
               ? const Color(0xff2563EB)
               : Colors.white,
-
           borderRadius: BorderRadius.circular(18),
-
           border: Border.all(
             color: selected
                 ? const Color(0xff2563EB)
                 : Colors.grey.shade300,
             width: 1.5,
           ),
-
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.05),
@@ -158,7 +176,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
             ),
           ],
         ),
-
         child: Row(
           children: [
             Icon(
@@ -168,9 +185,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   ? Colors.white
                   : const Color(0xff2563EB),
             ),
-
             const SizedBox(width: 18),
-
             Expanded(
               child: Text(
                 title,
@@ -183,10 +198,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 ),
               ),
             ),
-
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 200),
-
               child: selected
                   ? const Icon(
                       Icons.check_circle,
